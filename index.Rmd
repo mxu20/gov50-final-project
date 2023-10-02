@@ -11,4 +11,4 @@ output:
 
 ## Project thoughts
 
-I am interested in exploring data related to level and depth of history education and voting patterns. For instance, I would like to know if more offerings in History in middle and high school correlate with patterns in voting for one political party over the other.
+I am interested in exploring data related to level and depth of history education and voting patterns. For instance, I would like to know if more offerings in History in middle and high school correlate with patterns in voting for one political party over the other. 
