@@ -12,3 +12,36 @@ output:
 ## Proposal
 
 How did people who come from families involved with labor unions vote in the 2020 presidential election versus the 2016 presidential election? I hypothesize that a greater proportion of people whose family members worked in union jobs voted Republican than Democrat in 2016 than in 2020, though I also hypothesize that only a slight majority of people whose family members worked in union jobs voted blue in 2020. I hypothesize this because of Donald Trump's appeal to white, working-class Americans; though many workplaces are not unionized, I believe it would be interesting to examine whether or not people from unionized backgrounds would have voted majority red in 2016 — and whether that changed during the 2020 election. I am using the Roper National Election Pool Poll: 2020 National Election Day Exit Poll, as well as a similar poll for 2016. My explanatory variable of interest is primarily whether or not someone has family members who are part of labor unions (measured through a poll asking the respondent yes or no, corresponding to 1 or 0), although I am also interested in seeing different analyses across race and family income. My outcome variable of interest is which presidential candidate the respondent chose to vote for (measured by soliciting the name of the candidate through the poll). If there are no other confounding variables, such as income or race, and I can observe that having someone in ones family who is a part of a labor union has a significant correlation with the corresponding candidate that I have hypothesized for each election, then I will be able to prove my hypothesis.
+
+## Data Visualization
+
+```{r}
+library(tidyverse)
+library(dplyr)
+library(tidyr)
+data2020 <- read.csv("31119913_National2020 (1).csv")
+
+data2020 <- data2020 |>
+  filter(!is.na(data2020$unionhh1) |
+           is.na(data2020$pres)) |>
+  mutate(unionhh1 = if_else(unionhh1 == "Yes", 1, 0)) |>
+  group_by(pres, unionhh1) |>
+  summarize(union_mean = mean(unionhh1), .groups = "drop")
+  
+
+ggplot(data = data2020, mapping = aes(x = pres, y = union_mean)) +
+  geom_col(position = "dodge")
+```
+
+```{r}
+data2016 <- read.csv("31116396_National2016.csv")
+
+data2016 |>
+  mutate(UNIONHH12 = if_else(UNIONHH12 == "Yes", 1, 0)) |>
+  group_by(PRES, UNIONHH12) |>
+  summarize(union_mean2016 = mean(UNIONHH12), .groups = "drop")
+
+
+
+```
+
