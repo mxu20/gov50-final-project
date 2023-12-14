@@ -8,12 +8,18 @@ output:
 ---
 
 
+## Introduction
 
-## Proposal
+How did having family members in a labor union impact the way people voted in the 2020 presidential election and the 2016 presidential election? I hypothesize that among those who voted for each candidate in 2016 and 2020, a greater proportion of people who voted for Donald Trump would have family members in union jobs than people who voted for other candidates. I hypothesize this because of Donald Trump's appeal to white, working-class Americans, though some workplaces are not unionized. This is an important question because it could illuminate aspects of the political culture of labor unions in the United States — and it can help researchers further evaluate the perception of Trump as a populist candidate and one who could appeal to the best interests of workers. Though, if it is the case that a greater proportion of those who voted for Hillary Clinton or Joe Biden are people who are connected to unions — which seek to act for the interests of workers — then it could mean that those union communities did not see Trump as someone who will represent workers' interests.
 
-How did people who come from families involved with labor unions vote in the 2020 presidential election versus the 2016 presidential election? I hypothesize that a greater proportion of people whose family members worked in union jobs voted Republican than Democrat in 2016 than in 2020, though I also hypothesize that only a slight majority of people whose family members worked in union jobs voted blue in 2020. I hypothesize this because of Donald Trump's appeal to white, working-class Americans; though many workplaces are not unionized, I believe it would be interesting to examine whether or not people from unionized backgrounds would have voted majority red in 2016 — and whether that changed during the 2020 election. I am using the Roper National Election Pool Poll: 2020 National Election Day Exit Poll, as well as a similar poll for 2016. My explanatory variable of interest is primarily whether or not someone has family members who are part of labor unions (measured through a poll asking the respondent yes or no, corresponding to 1 or 0), although I am also interested in seeing different analyses across race and family income. My outcome variable of interest is which presidential candidate the respondent chose to vote for (measured by soliciting the name of the candidate through the poll). If there are no other confounding variables, such as income or race, and I can observe that having someone in ones family who is a part of a labor union has a significant correlation with the corresponding candidate that I have hypothesized for each election, then I will be able to prove my hypothesis.
 
-## Data Visualization
+## Data
+
+I am using the Roper National Election Pool Poll: 2020 National Election Day Exit Poll, as well as the National Election Pool Poll: 2016 National Election Day Exit Poll. These are cross-sectional studies, and data were collected via telephone interviews, on-site questionnaires, and early voter exit polls. My explanatory variable of interest is primarily whether or not someone has family members who are part of labor unions (measured through a survey asking the respondent yes or no). My outcome variable of interest is which presidential candidate the respondent chose to vote for (measured by soliciting the name of the candidate through the poll).
+
+The two datasets also have numerous other questions about the voter's race, income, other political views, etc. I will be running multiple regressions on both datasets to account for other factors, such as whether or not the individual has received a college degree and their race. Unfortunately, I was not able to account for income because those who filled out the union question did not fill out the income questions.
+
+The following graphs represent all responses in each survey about the 
 
 ```{r}
 library(tidyverse)
@@ -22,26 +28,148 @@ library(tidyr)
 data2020 <- read.csv("31119913_National2020 (1).csv")
 
 data2020 <- data2020 |>
-  filter(!is.na(data2020$unionhh1) |
-           is.na(data2020$pres)) |>
-  mutate(unionhh1 = if_else(unionhh1 == "Yes", 1, 0)) |>
-  group_by(pres, unionhh1) |>
-  summarize(union_mean = mean(unionhh1), .groups = "drop")
-  
+  filter(unionhh1 == "Yes" | unionhh1 == "No") |>
+  filter(pres != " ")
 
-ggplot(data = data2020, mapping = aes(x = pres, y = union_mean)) +
-  geom_col(position = "dodge")
+ggplot(
+  data = data2020, 
+  mapping = aes(x = pres)) +
+  geom_histogram(stat = "count") +
+  labs(x = "Presidential Candidate", y ="Count", title = "2020 Presidential Votes Per Survey")
+
 ```
 
 ```{r}
 data2016 <- read.csv("31116396_National2016.csv")
 
-data2016 |>
-  mutate(UNIONHH12 = if_else(UNIONHH12 == "Yes", 1, 0)) |>
-  group_by(PRES, UNIONHH12) |>
-  summarize(union_mean2016 = mean(UNIONHH12), .groups = "drop")
+data2016 <- data2016 |>
+  filter(UNIONHH12 == "Yes" | UNIONHH12 == "No") |>
+  filter(PRES != " ")
 
-
-
+ggplot(
+  data = data2016, 
+  mapping = aes(x = PRES)) +
+  geom_histogram(stat = "count") +
+  labs(x = "Presidential Candidate", y ="Count", title = "2016 Presidential Votes Per Survey")
 ```
 
+## Results 
+
+```{r}
+d2020 <- data2020 |>
+  select(unionhh1, pres) |>
+  group_by(pres, unionhh1) |>
+  summarise(n = n())
+
+d2020_plot <- ggplot(data = d2020, mapping = aes(x = pres, y = n, fill = unionhh1)) +
+  geom_col(position = "dodge") +
+  labs(x = "Presidential Candidate", y = "Count", title = "2020 Presidential Votes By Family Member Union Status", fill = "Family Member Union Status")
+
+d2020_plot
+```
+
+```{r}
+d2016 <- data2016 |>
+  select(UNIONHH12, PRES) |>
+  group_by(PRES, UNIONHH12) |>
+  summarise(n = n())
+
+ggplot(data = d2016, mapping = aes(x = PRES, y = n, fill = UNIONHH12)) +
+  geom_col(position = "dodge") +
+  labs(x = "Presidential Candidate", y = "Count", title = "2016 Presidential Votes By Family Member Union Status", fill = "Family Member Union Status")
+
+```
+```{r}
+df <- d2020 |>
+  mutate(freq = n / sum(n))
+
+ggplot(data = df, mapping = aes(x = pres, y = freq, fill = unionhh1)) +
+  geom_col(position = "dodge") +
+  labs(x = "Presidential Candidate", y = "Proportion of Votes per Candidate", title = "Proportion of 2020 Presidential Voters with Family Members in Unions", fill = "Family Member Union Status")
+```
+```{r}
+df2 <- d2016 |>
+  mutate(freq = n / sum(n))
+
+ggplot(data = df2, mapping = aes(x = PRES, y = freq, fill = UNIONHH12)) +
+  geom_col(position = "dodge") +
+  labs(x = "Presidential Candidate", y = "Proportion of Votes per Candidate", title = "Proportion of 2016 Presidential Voters with Family Members in Unions", fill = "Family Member Union Status")
+```
+```{r}
+knitr::kable(df, digits = 3, caption = "Proportion of Voters who Voted for Each Candidate in 2020 with Family Members in Union", col.names = c("2020 Presidential Candidate", "Family Member Union Status", "Count", "Proportion of Voters for Candidate with Family in Union")) 
+```
+
+```{r}
+knitr::kable(df2, digits = 3, caption = "Proportion of Voters who Voted for Each Candidate in 2016 with Family Members in Union", col.names = c("2016 Presidential Candidate", "Family Member Union Status", "Count", "Proportion of Voters for Candidate with Family in Union"))
+```
+
+For the 2020 presidential election, people who had family members in unions made up 16.1% of voters who voted for Donald Trump, compared to 20.3% of voters who voted for Joe Biden. The difference in proportions is 0.042.
+
+For the 2016 presidential election, people who had family members in unions made up 17% of voters who voted for Donald Trump in 2016, compared to 22.6% for those who voted for Hillary Clinton, 21.2% for those who voted for Gary Johnson, and 20.3% for those who voted for Jill Stein. The difference in proportions for voters whose family members are in unions for Hillary Clinton and Donald Trump is 0.056.
+
+When we run a multiple regression on each of these datasets, this is what we get:
+
+```{r}
+library(broom)
+library(modelsummary)
+
+reg2020 <- data2020 |>
+  filter(pres == "Donald Trump" | pres == "Joe Biden") |>
+  mutate(president = if_else(pres == "Joe Biden", 1, 0))
+
+union_regression <- glm(president ~ unionhh1 + educcoll + qraceai, data = reg2020)
+
+
+var_labels <- c(
+  "(Intercept)" = "Intercept",
+  "unionhh1Yes" = "Family Members in Union",
+  "educcollNo college degree" = "No College Degree",
+  "qraceaiAmerican Indian" = "American Indian",
+  "qraceaiAsian" = "Asian",
+  "qraceaiBlack" = "Black",
+  "qraceaiHispanic/Latino" = "Hispanic/Latino",
+  "qraceaiOther" = "Other Racial Category",
+  "qraceaiWhite" = "White"
+)
+modelsummary::modelsummary(union_regression,
+                           statistic = c("s.e. = {std.error}",
+                                         "p = {p.value}"),
+                           gof_map = c("nobs", "r.squared", "adj.r.squared"), 
+                           coef_map = var_labels)
+
+```
+```{r}
+reg2016 <- data2016 |>
+  filter(PRES == "Donald Trump" | PRES == "Hillary Clinton") |>
+  mutate(president = if_else(PRES == "Hillary Clinton", 1, 0))
+
+union_regression2016 <- glm(president ~ UNIONHH12 + EDUCCOLL + QRACEAI, data = reg2016)
+
+var_labels <- c(
+  "(Intercept)" = "Intercept",
+  "UNIONHH12Yes" = "Family Members in Union",
+  "EDUCCOLLCollege graduate" = "College Graduate",
+  "EDUCCOLLNo college degree" = "No College Degree",
+  "QRACEAIAmerican Indian" = "American Indian",
+  "QRACEAIAsian" = "Asian",
+  "QRACEAIBlack" = "Black",
+  "QRACEAIHispanic/Latino" = "Hispanic/Latino",
+  "QRACEAIOther" = "Other Racial Category",
+  "QRACEAIWhite" = "White"
+)
+modelsummary::modelsummary(union_regression2016,
+                           statistic = c("s.e. = {std.error}",
+                                         "p = {p.value}"),
+                           gof_map = c("nobs", "r.squared", "adj.r.squared"),
+                           coef_map = var_labels)
+```
+
+To simplify the datasets, I only ran the regression for those who voted for the two top candidates of each year — Joe Biden and Donald Trump, and Hillary Clinton and Donald Trump. I assigned 1 to the Democratic candidate, and I assigned 0 to Donald Trump. For the 2020 presidential election data, those with family members in the union voted Joe Biden more frequently than they voted Donald Trump by 0.051 points (if we interpret 0 to mean that everyone with a family member in a union voted for Donald Trump and 1 to mean that everyone with a family member in a union voted for Joe Biden), while accounting for other factors like the race and college education status of the voter. The difference is statistically significant at the 0.05 level, since the p-value is 0.011. If the null hypothesis is no difference (0), we can reject the null hypothesis at the 0.05 level.
+
+For the 2016 presidential election data, those with family members in the union voted Hillary Clinton more frequently than they voted Donald Trump by 0.047 points (if we interpret 0 to mean that everyone with a family member in a union voted for Donald Trump and 1 to mean that everyone with a family member in a union voted for Hillary Clinton), while accounting for other factors like the race and college education status of the voter. The difference is statistically significant at the 0.05 level, since the p-value is 0.007. If the null hypothesis is no difference (0), we can reject the null hypothesis at the 0.05 level.
+
+It is difficult to interpret these results causally, since a myriad of factors can cause someone to vote in one direction or another, and we are not able to account for every single factor that can affect someone's voting decisions. We can only say that these differences are statistically significant.
+
+## Conclusion
+
+The results contradict my intial hypothesis, since they indicate that there was a greater proportion of people whose family members are in unions among those who voted for Democratic candidates than Donald Trump in 2016 and 2020. One important confounding variable that I was not able to account for was the voters' income. Those who answered the question about having family members in a labor union did not fill out information about their income levels. This would have been important to understand, since there is an important relationship between union status and income and whether unionized jobs might pay more than non-unionized jobs. I could prove my analysis with more time by finding a better dataset that had more complete data about income levels.
