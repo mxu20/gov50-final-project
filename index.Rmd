@@ -1,7 +1,7 @@
 ---
 title: "Xu Gov 50 Final Project"
 author: "Meimei Xu"
-description: "My final project"
+description: "How did having family members in a labor union impact the way people voted in the 2020 presidential election and the 2016 presidential election?"
 output:
   distill::distill_article:
     self_contained: false
